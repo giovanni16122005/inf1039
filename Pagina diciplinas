@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+
+{% block title %}GradGuru • Disciplinas{% endblock %}
+
+{% block content %}
+<div class="disciplinas-wrapper">
+  <!-- Filtros Laterais -->
+  <aside class="filtros">
+    <h3>Filtrar por</h3>
+
+    <div class="filtro-box">
+      <label><strong>Tipo:</strong></label>
+      <label><input type="radio" name="tipo" class="filtro" data-col="tipo" value=""> Todas</label>
+      <label><input type="radio" name="tipo" class="filtro" data-col="tipo" value="Obrigatória"> Obrigatória</label>
+      <label><input type="radio" name="tipo" class="filtro" data-col="tipo" value="Eletiva"> Eletiva</label>
+    </div>
+
+    <div class="filtro-box">
+      <label for="graduacao"><strong>Graduação:</strong></label>
+      <select id="graduacao" class="filtro" data-col="graduacao">
+        <option value="">Todas</option>
+        <option value="Engenharia">Engenharia</option>
+        <option value="Computação">Computação</option>
+      </select>
+    </div>
+
+    <div class="filtro-box">
+      <label for="departamento"><strong>Departamento:</strong></label>
+      <select id="departamento" class="filtro" data-col="departamento">
+        <option value="">Todos</option>
+        <option value="Informática">Informática</option>
+        <option value="Matemática">Matemática</option>
+      </select>
+    </div>
+
+    <button class="botao-aplicar" onclick="aplicarFiltros()">Aplicar Filtros</button>
+  </aside>
+
+  <!-- Conteúdo Principal -->
+  <section class="disciplinas-conteudo">
+    <div class="search-bar search-pequena">
+      <input type="text" id="search" placeholder="🔍 Buscar disciplina..." />
+    </div>
+
+    <div class="section no-padding">
+      <table class="disciplinas-tabela">
+        <thead>
+          <tr>
+            <th>Código</th>
+            <th>Nome</th>
+            <th>Departamento</th>
+            <th>Graduação</th>
+            <th>Tipo</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="disciplinas-tabela">
+          {% for d in disciplinas %}
+          <tr data-codigo="{{ d.codigo }}" data-nome="{{ d.nome }}" data-departamento="{{ d.departamento }}"
+              data-graduacao="{{ d.graduacao }}" data-tipo="{{ d.tipo }}">
+            <td>{{ d.codigo }}</td>
+            <td>{{ d.nome }}</td>
+            <td>{{ d.departamento }}</td>
+            <td>{{ d.graduacao }}</td>
+            <td>{{ d.tipo }}</td>
+            <td>
+              <a href="{% url 'disciplinas:pag_disciplina' d.codigo|lower %}">Ver</a>
+              <span class="heart" onclick="toggleHeart(this)">&#10084;</span>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>
+
+<!-- CSS do coração -->
+<style>
+  .heart {
+    font-size: 20px;
+    color: #ccc; /* cinza claro por padrão */
+    cursor: pointer;
+    margin-left: 8px; /* espaço do link "Ver" */
+    transition: color 0.3s;
+    user-select: none;
+  }
+
+  .heart.liked {
+    color: red; /* vermelho quando curtido */
+  }
+</style>
+
+<!-- Scripts -->
+<script>
+  function aplicarFiltros() {
+    const busca = document.getElementById('search').value.trim().toLowerCase();
+    const tipoSelecionado = document.querySelector('input[name="tipo"]:checked')?.value.trim().toLowerCase() || "";
+    const graduacao = document.getElementById('graduacao').value.trim().toLowerCase();
+    const departamento = document.getElementById('departamento').value.trim().toLowerCase();
+
+    const linhas = document.querySelectorAll('#disciplinas-tabela tr');
+
+    linhas.forEach(row => {
+      const texto = row.innerText.toLowerCase();
+      let mostrar = texto.includes(busca);
+
+      const tipo = (row.dataset.tipo || "").trim().toLowerCase();
+      const grad = (row.dataset.graduacao || "").trim().toLowerCase();
+      const dept = (row.dataset.departamento || "").trim().toLowerCase();
+
+      if (tipoSelecionado && tipo !== tipoSelecionado) mostrar = false;
+      if (graduacao && grad !== graduacao) mostrar = false;
+      if (departamento && dept !== departamento) mostrar = false;
+
+      row.style.display = mostrar ? "" : "none";
+    });
+  }
+
+  document.getElementById('search').addEventListener('input', aplicarFiltros);
+
+  window.addEventListener('DOMContentLoaded', () => {
+    const params = new URLSearchParams(window.location.search);
+
+    const tipo = params.get('tipo');
+    if (tipo) {
+      const radio = document.querySelector(`input[name="tipo"][value="${tipo}"]`);
+      if (radio) radio.checked = true;
+    }
+
+    const graduacao = params.get('graduacao');
+    if (graduacao) {
+      const select = document.getElementById('graduacao');
+      if (select) select.value = graduacao;
+    }
+
+    const departamento = params.get('departamento');
+    if (departamento) {
+      const select = document.getElementById('departamento');
+      if (select) select.value = departamento;
+    }
+
+    aplicarFiltros();
+  });
+
+  // Script do coração
+  function toggleHeart(element) {
+    element.classList.toggle('liked');
+  }
+</script>
+
+{% endblock %}
